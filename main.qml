@@ -43,6 +43,14 @@ ApplicationWindow {
         }
     }
 
+    Shortcut {
+        sequences: ["Shift+Ctrl+X", "Shift+Meta+X"]
+        context: Qt.ApplicationShortcut
+        onActivated: {
+            optionspopup.openPopup()
+        }
+    }
+
     ColumnLayout {
         id: bg
         spacing: 0
@@ -180,10 +188,15 @@ ApplicationWindow {
                         Material.background: "#ffffff"
                         Material.foreground: "#c51a4a"
                         onClicked: {
-                            if (!imageWriter.readyToWrite())
-                                return;
+                            if (!imageWriter.readyToWrite()) {
+                                return
+                            }
 
-                            confirmwritepopup.askForConfirmation()
+                            if (!optionspopup.initialized && imageWriter.hasSavedCustomizationSettings()) {
+                                usesavedsettingspopup.openPopup()
+                            } else {
+                                confirmwritepopup.askForConfirmation()
+                            }
                         }
                         Accessible.onPressAction: clicked()
                     }
@@ -775,6 +788,26 @@ ApplicationWindow {
         text: qsTr("There is a newer version of Imager available.<br>Would you like to visit the website to download it?")
         onYes: {
             Qt.openUrlExternally(url)
+        }
+    }
+
+    OptionsPopup {
+        id: optionspopup
+    }
+
+    UseSavedSettingsPopup {
+        id: usesavedsettingspopup
+        onYes: {
+            optionspopup.initialize()
+            optionspopup.applySettings()
+            confirmwritepopup.askForConfirmation()
+        }
+        onNo: {
+            imageWriter.clearSavedCustomizationSettings()
+            confirmwritepopup.askForConfirmation()
+        }
+        onEditSettings: {
+            optionspopup.openPopup()
         }
     }
 
